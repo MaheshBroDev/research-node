@@ -132,6 +132,10 @@ app.get('/item/last', authMiddleware, performanceLoggingMiddleware('/item/last')
 // Create Item (Authenticated)
 app.post('/items/create', authMiddleware, performanceLoggingMiddleware('/items/create'), (req, res) => {
     const { name, value } = req.body;
+    const is_debug = req.query.debug || false;
+    if (is_debug){
+        res.send({name, value});
+    }
     db.query('INSERT INTO items (name, value) VALUES (?, ?)', [name, value], (err) => {
         if (err) return res.status(500).json({ error: 'Error saving item' });
         res.status(201).send('Item created');
