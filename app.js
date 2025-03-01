@@ -77,6 +77,7 @@ const authMiddleware = (req, res, next) => {
     }
 
     const token = authHeader.substring(7);
+    res.send(token);
     db.query('SELECT username FROM users WHERE token = ?', [token], (err, results) => {
         if (err || results.length === 0) {
             return res.status(401).json({ error: 'Unauthorized' });
