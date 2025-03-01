@@ -133,12 +133,12 @@ app.get('/item/last', authMiddleware, performanceLoggingMiddleware('/item/last')
 app.post('/items/create', authMiddleware, performanceLoggingMiddleware('/items/create'), (req, res) => {
     const { name, value } = req.body;
     const is_debug = req.query.debug || false;
-    if (is_debug){
-        return res.send({name, value});
+    if (is_debug) {
+        return res.json({ name, value });
     }
     db.query('INSERT INTO items (name, value) VALUES (?, ?)', [name, value], (err) => {
-        if (err) return res.status(500).json({ error: 'Error saving item' });
-        res.status(201).send('Item created');
+        if (err) return res.status(500).json({ error: 'Error saving item' ,err});
+        res.status(201).json({ message: 'Item created' });
     });
 });
 
