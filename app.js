@@ -248,9 +248,20 @@ app.get('/metrics', performanceLoggingMiddleware('/metrics'), (req, res) => {
     if (!fs.existsSync('performance_metrics_node.json')) {
         return res.status(404).send('No performance metrics available');
     }
+
     const json = fs.readFileSync('performance_metrics_node.json', 'utf8');
     res.set('Content-Type', 'application/json');
     res.send(json);
+});
+
+app.get('/metrics/delete', performanceLoggingMiddleware('/metrics/delete'), (req, res) => {
+    fs.deleteFile('performance_metrics_node.json', (err) => {
+        if (err) {
+            console.error('Error deleting performance metrics file:', err);
+            return res.status(500).json({ error: 'Failed to delete performance metrics' });
+        }
+        return res.status(200).json({ message: 'Performance metrics deleted' });
+    });
 });
 
 app.get('/docker_metrics', (req, res) => {
