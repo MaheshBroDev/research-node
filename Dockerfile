@@ -8,6 +8,7 @@ RUN npm install
 
 RUN npm install mysql2
 
+
 COPY . .
 
 EXPOSE 8081

@@ -5,6 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
+const DockerStats = require('dockerstats');
 
 const app = express();
 app.use(bodyParser.json());
@@ -251,6 +252,39 @@ app.get('/metrics', performanceLoggingMiddleware('/metrics'), (req, res) => {
     res.set('Content-Type', 'application/json');
     res.send(json);
 });
+
+app.get('/docker_metrics', (req, res) => {
+    if (!fs.existsSync('docker_metrics_node.json')) {
+        return res.status(404).send('No docker metrics available');
+    }
+    const json = fs.readFileSync('docker_metrics_node.json', 'utf8');
+    res.set('Content-Type', 'application/json');
+    res.send(json);
+});
+
+const dockerStats = new DockerStats();
+
+dockerStats.on('stats', (stats) => {
+const cpuUsage = stats.cpu.usage;
+const memoryUsage = stats.memory.usage;
+const activeConnections = stats.networks.eth0.rx_bytes; // Example for capturing active connections
+const timestamp = new Date().toISOString();
+
+const logEntry = {
+    timestamp: timestamp,
+    cpuUsage: cpuUsage,
+    memoryUsage: memoryUsage,
+    activeConnections: activeConnections
+};
+
+  fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
+    if (err) {
+      console.error('Error writing to docker_metrics_node.json:', err);
+    }
+  });
+});
+
+dockerStats.start();
 
 // Start the Server
 app.listen(PORT, () => {
