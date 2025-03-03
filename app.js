@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const dockerStats = require('docker-stats');
+const dockerStats = require('dockerstats2');
 
 const app = express();
 app.use(bodyParser.json());
@@ -265,9 +265,9 @@ app.get('/docker_metrics', (req, res) => {
 const stream = dockerStats({ stream: true });
 
 stream.on('data', (stats) => {
-    const cpuUsage = stats.cpu.usage;
-    const memoryUsage = stats.memory.usage;
-    const activeConnections = stats.netIO.rxBytes; // Example for capturing active connections
+    const cpuUsage = stats.cpuStats.cpuUsage.totalUsage;
+    const memoryUsage = stats.memoryStats.usage;
+    const activeConnections = stats.networkIO.rxBytes; // Example for capturing active connections
     const timestamp = new Date().toISOString();
 
     const logEntry = {
