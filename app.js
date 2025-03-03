@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const DockerStats = require('dockerstats');
+const DockerStats = require('dockerstats').DockerStats;
 
 const app = express();
 app.use(bodyParser.json());
@@ -297,6 +297,27 @@ app.get('/health', (req, res) => {
     });
 });
 
+app.get('/performance/last', performanceLoggingMiddleware('/performance/last'), (req, res) => {
+    fs.readFile('performance_metrics_node.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading performance metrics file:', err);
+            return res.status(500).json({ error: 'Failed to read performance metrics' });
+        }
+
+        const lines = data.trim().split('\n');
+        if (lines.length === 0) {
+            return res.status(404).json({ error: 'No performance metrics available' });
+        }
+
+        try {
+            const lastMetric = JSON.parse(lines[lines.length - 1]);
+            res.json(lastMetric);
+        } catch (parseError) {
+            console.error('Error parsing last performance metric:', parseError);
+            res.status(500).json({ error: 'Failed to parse performance metrics' });
+        }
+    });
+});
 
 // Graceful Shutdown
 process.on('SIGINT', () => {
