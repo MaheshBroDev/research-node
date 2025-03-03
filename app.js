@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const dockerStats = require('dockerstats2');
+const dockerStats = require('node-docker-stats');
 
 const app = express();
 app.use(bodyParser.json());
@@ -262,26 +262,27 @@ app.get('/docker_metrics', (req, res) => {
     res.send(json);
 });
 
-const stream = dockerStats({ stream: true });
+const options = {
+  stream: true,
+  docker: null
+};
 
-stream.on('data', (stats) => {
-    const cpuUsage = stats.cpuStats.cpuUsage.totalUsage;
-    const memoryUsage = stats.memoryStats.usage;
-    const activeConnections = stats.networkIO.rxBytes; // Example for capturing active connections
-    const timestamp = new Date().toISOString();
+const stats = dockerStats(options);
 
-    const logEntry = {
-        timestamp: timestamp,
-        cpuUsage: cpuUsage,
-        memoryUsage: memoryUsage,
-        activeConnections: activeConnections
-    };
+stats.on('data', (stat) => {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    cpuUsage: stat.cpuStats.cpuUsage.totalUsage,
+    memoryUsage: stat.memoryStats.usage,
+    netInput: stat.networkIO.rxBytes,
+    netOutput: stat.networkIO.txBytes
+  };
 
-    fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
-        if (err) {
-            console.error('Error writing to docker_metrics_node.json:', err);
-        }
-    });
+  fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
+    if (err) {
+      console.error('Error writing to docker_metrics_node.json:', err);
+    }
+  });
 });
 
 // Health Check Endpoint
@@ -320,7 +321,7 @@ app.get('/performance/last', performanceLoggingMiddleware('/performance/last'), 
 // Graceful Shutdown
 process.on('SIGINT', () => {
     console.log('Shutting down server...');
-    stream.destroy();
+    stats.removeAllListeners();
     db.end(err => {
         if (err) {
             console.error('Error closing database connection:', err);
@@ -333,7 +334,7 @@ process.on('SIGINT', () => {
 
 process.on('SIGTERM', () => {
     console.log('Shutting down server...');
-    stream.destroy();
+    stats.removeAllListeners();
     db.end(err => {
         if (err) {
             console.error('Error closing database connection:', err);
