@@ -33,21 +33,6 @@ const logPerformanceMetrics = (endpoint, startTime) => {
     const elapsed = process.hrtime(startTime);
     const elapsedTimeMs = (elapsed[0] * 1000 + elapsed[1] / 1e6).toFixed(2);
     const memoryUsage = process.memoryUsage();
-    const csvWriter = createObjectCsvWriter({
-        path: 'performance_metrics_node.csv',
-        append: true,
-        header: [
-            { id: 'timestamp', title: 'Timestamp' },
-            { id: 'endpoint', title: 'Endpoint' },
-            { id: 'rss', title: 'Resident Set Size (bytes)' },
-            { id: 'heapTotal', title: 'Heap Total (bytes)' },
-            { id: 'heapUsed', title: 'Heap Used (bytes)' },
-            { id: 'elapsedTime', title: 'Elapsed Time (ms)' },
-            { id: 'cpuUsage', title: 'CPU Usage (%)' },
-            { id: 'memoryUsage', title: 'Memory Usage (MB)' }
-        ]
-    });
-
     const record = {
         timestamp: new Date().toISOString(),
         endpoint: endpoint,
@@ -59,7 +44,9 @@ const logPerformanceMetrics = (endpoint, startTime) => {
         memoryUsage: (memoryUsage.heapUsed / 1024 / 1024).toFixed(2)
     };
 
-    csvWriter.writeRecords([record]).catch(err => console.error('Error writing to CSV:', err));
+    fs.appendFile('performance_metrics_node.json', JSON.stringify(record) + '\n', err => {
+        if (err) console.error('Error writing to JSON file:', err);
+    });
 };
 
 // Middleware for performance logging
@@ -257,12 +244,12 @@ app.post('/sort', authMiddleware, performanceLoggingMiddleware('/sort'), (req, r
 
 // Get performance metrics
 app.get('/metrics', performanceLoggingMiddleware('/metrics'), (req, res) => {
-    if (!fs.existsSync('performance_metrics_node.csv')) {
+    if (!fs.existsSync('performance_metrics_node.json')) {
         return res.status(404).send('No performance metrics available');
     }
-    const csv = fs.readFileSync('performance_metrics_node.csv', 'utf8');
-    res.set('Content-Type', 'text/csv');
-    res.send(csv);
+    const json = fs.readFileSync('performance_metrics_node.json', 'utf8');
+    res.set('Content-Type', 'application/json');
+    res.send(json);
 });
 
 // Start the Server
