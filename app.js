@@ -255,7 +255,7 @@ app.get('/metrics', performanceLoggingMiddleware('/metrics'), (req, res) => {
 });
 
 app.get('/metrics/delete', performanceLoggingMiddleware('/metrics/delete'), (req, res) => {
-    fs.deleteFile('performance_metrics_node.json', (err) => {
+    fs.unlink('performance_metrics_node.json', (err) => {
         if (err) {
             console.error('Error deleting performance metrics file:', err);
             return res.status(500).json({ error: 'Failed to delete performance metrics' });
