@@ -286,6 +286,45 @@ const logEntry = {
 
 dockerStats.start();
 
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+    db.query('SELECT 1', (err) => {
+        if (err) {
+            console.error('Database health check failed:', err);
+            return res.status(500).send('Database not OK');
+        }
+        res.status(200).send('OK');
+    });
+});
+
+
+// Graceful Shutdown
+process.on('SIGINT', () => {
+    console.log('Shutting down server...');
+    dockerStats.stop();
+    db.end(err => {
+        if (err) {
+            console.error('Error closing database connection:', err);
+            process.exit(1);
+        }
+        console.log('Database connection closed.');
+        process.exit(0);
+    });
+});
+
+process.on('SIGTERM', () => {
+    console.log('Shutting down server...');
+    dockerStats.stop();
+    db.end(err => {
+        if (err) {
+            console.error('Error closing database connection:', err);
+            process.exit(1);
+        }
+        console.log('Database connection closed.');
+        process.exit(0);
+    });
+});
+
 // Start the Server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
