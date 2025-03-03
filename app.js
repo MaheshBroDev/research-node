@@ -335,6 +335,13 @@ app.get('/performance/last', performanceLoggingMiddleware('/performance/last'), 
     });
 });
 
+// Endpoint to serve text files from /loader/<path>.txt
+app.get('/loaderio-:filename([a-zA-Z0-9]{32}).txt', (req, res) => {
+    const filename = req.params.filename;
+    res.set('Content-Type', 'text/plain');
+    res.send(`loaderio-${filename}`);
+});
+
 // Graceful Shutdown
 process.on('SIGINT', () => {
     console.log('Shutting down server...');
