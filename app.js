@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const dockerStats = require('node-docker-stats');
+const dockerStats = require('docker-stats');
 
 const app = express();
 app.use(bodyParser.json());
