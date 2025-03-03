@@ -338,8 +338,14 @@ app.get('/performance/last', performanceLoggingMiddleware('/performance/last'), 
 // Endpoint to serve text files from /loader/<path>.txt
 app.get('/loaderio-:filename([a-zA-Z0-9]{32}).txt', (req, res) => {
     const filename = req.params.filename;
-    res.set('Content-Type', 'text/plain');
-    res.send(`loaderio-${filename}`);
+    const filePath = `/loaderio-${filename}.txt`;
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).send('File not found');
+        }
+        res.set('Content-Type', 'text/plain');
+        res.send(data);
+    });
 });
 
 // Graceful Shutdown
