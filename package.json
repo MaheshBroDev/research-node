@@ -2,11 +2,11 @@
   "dependencies": {
     "body-parser": "^1.20.3",
     "csv-writer": "^1.6.0",
+    "dockerode": "^3.3.5",
     "express": "^4.21.2",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.12.0",
-    "node-docker-stats": "^1.1.0",
     "os": "^0.1.2"
   }
 }

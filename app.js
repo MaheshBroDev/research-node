@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const dockerStats = require('node-docker-stats');
+const Docker = require('dockerode');
 
 const app = express();
 app.use(bodyParser.json());
@@ -262,28 +262,45 @@ app.get('/docker_metrics', (req, res) => {
     res.send(json);
 });
 
-const options = {
-  stream: true,
-  docker: null
-};
+const docker = new Docker();
 
-const stats = dockerStats(options);
-
-stats.on('data', (stat) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
-    cpuUsage: stat.cpuStats.cpuUsage.totalUsage,
-    memoryUsage: stat.memoryStats.usage,
-    netInput: stat.networkIO.rxBytes,
-    netOutput: stat.networkIO.txBytes
-  };
-
-  fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
-    if (err) {
-      console.error('Error writing to docker_metrics_node.json:', err);
+async function getContainerStats() {
+  try {
+    const containers = await docker.listContainers();
+    if (containers.length === 0) {
+      console.log('No containers running.');
+      return;
     }
-  });
-});
+
+    // Assuming we want stats for the first container
+    const container = docker.getContainer(containers[0].Id);
+    const statsStream = await container.stats({ stream: true });
+
+    statsStream.on('data', (stat) => {
+      const logEntry = {
+        timestamp: new Date().toISOString(),
+        cpuUsage: stat.cpu_stats.cpu_usage.total_usage,
+        memoryUsage: stat.memory_stats.usage,
+        netInput: stat.networks.eth0.rx_bytes,
+        netOutput: stat.networks.eth0.tx_bytes
+      };
+
+      fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
+        if (err) {
+          console.error('Error writing to docker_metrics_node.json:', err);
+        }
+      });
+    });
+
+    statsStream.on('error', (err) => {
+      console.error('Error getting container stats:', err);
+    });
+  } catch (err) {
+    console.error('Error listing containers:', err);
+  }
+}
+
+getContainerStats();
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
@@ -321,7 +338,6 @@ app.get('/performance/last', performanceLoggingMiddleware('/performance/last'), 
 // Graceful Shutdown
 process.on('SIGINT', () => {
     console.log('Shutting down server...');
-    stats.removeAllListeners();
     db.end(err => {
         if (err) {
             console.error('Error closing database connection:', err);
@@ -334,7 +350,6 @@ process.on('SIGINT', () => {
 
 process.on('SIGTERM', () => {
     console.log('Shutting down server...');
-    stats.removeAllListeners();
     db.end(err => {
         if (err) {
             console.error('Error closing database connection:', err);
