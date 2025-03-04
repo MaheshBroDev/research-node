@@ -290,43 +290,43 @@ app.get('/docker_metrics', (req, res) => {
 
 const docker = new Docker();
 
-async function getContainerStats() {
-  try {
-    const containers = await docker.listContainers();
-    if (containers.length === 0) {
-      console.log('No containers running.');
-      return;
-    }
+// async function getContainerStats() {
+//   try {
+//     const containers = await docker.listContainers();
+//     if (containers.length === 0) {
+//       console.log('No containers running.');
+//       return;
+//     }
 
-    // Assuming we want stats for the first container
-    const container = docker.getContainer(containers[0].Id);
-    const statsStream = await container.stats({ stream: true });
+//     // Assuming we want stats for the first container
+//     const container = docker.getContainer(containers[0].Id);
+//     const statsStream = await container.stats({ stream: true });
 
-    statsStream.on('data', (stat) => {
-      const logEntry = {
-        timestamp: new Date().toISOString(),
-        cpuUsage: stat.cpu_stats.cpu_usage.total_usage,
-        memoryUsage: stat.memory_stats.usage,
-        netInput: stat.networks.eth0.rx_bytes,
-        netOutput: stat.networks.eth0.tx_bytes
-      };
+//     statsStream.on('data', (stat) => {
+//       const logEntry = {
+//         timestamp: new Date().toISOString(),
+//         cpuUsage: stat.cpu_stats.cpu_usage.total_usage,
+//         memoryUsage: stat.memory_stats.usage,
+//         netInput: stat.networks.eth0.rx_bytes,
+//         netOutput: stat.networks.eth0.tx_bytes
+//       };
 
-      fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
-        if (err) {
-          console.error('Error writing to docker_metrics_node.json:', err);
-        }
-      });
-    });
+//       fs.appendFile('docker_metrics_node.json', JSON.stringify(logEntry) + '\n', (err) => {
+//         if (err) {
+//           console.error('Error writing to docker_metrics_node.json:', err);
+//         }
+//       });
+//     });
 
-    statsStream.on('error', (err) => {
-      console.error('Error getting container stats:', err);
-    });
-  } catch (err) {
-    console.error('Error listing containers:', err);
-  }
-}
+//     statsStream.on('error', (err) => {
+//       console.error('Error getting container stats:', err);
+//     });
+//   } catch (err) {
+//     console.error('Error listing containers:', err);
+//   }
+// }
 
-getContainerStats();
+// getContainerStats();
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
