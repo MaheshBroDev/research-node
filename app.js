@@ -368,6 +368,29 @@ app.get('/loaderio-:filename([a-zA-Z0-9]{32}).txt', (req, res) => {
     res.send(`loaderio-${filename}`);
 });
 
+app.delete('/item/delete', authMiddleware, performanceLoggingMiddleware('/item/delete'), (req, res) => {
+    const { id } = req.query;
+    if (!id || isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid ID' });
+    }
+    db.query('DELETE FROM items WHERE id = ?', [id], (err) => {
+        if (err) return res.status(500).json({ error: 'Error deleting item' });
+        res.json({ message: 'Item deleted' });
+    });
+});
+
+app.delete('/item/last/delete', authMiddleware, performanceLoggingMiddleware('/item/last/delete'), (req, res) => {
+    db.query('SELECT id FROM items ORDER BY id DESC LIMIT 1', (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        if (results.length === 0) return res.status(404).json({ error: 'No items found' });
+        const lastItemId = results[0].id;
+        db.query('DELETE FROM items WHERE id = ?', [lastItemId], (err) => {
+            if (err) return res.status(500).json({ error: 'Error deleting last item' });
+            res.json({ message: 'Last item deleted' });
+        });
+    });
+});
+
 // // Graceful Shutdown
 // process.on('SIGINT', () => {
 //     console.log('Shutting down server...');
