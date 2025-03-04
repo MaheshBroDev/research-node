@@ -368,30 +368,30 @@ app.get('/loaderio-:filename([a-zA-Z0-9]{32}).txt', (req, res) => {
     res.send(`loaderio-${filename}`);
 });
 
-// Graceful Shutdown
-process.on('SIGINT', () => {
-    console.log('Shutting down server...');
-    db.end(err => {
-        if (err) {
-            console.error('Error closing database connection:', err);
-            process.exit(1);
-        }
-        console.log('Database connection closed.');
-        process.exit(0);
-    });
-});
+// // Graceful Shutdown
+// process.on('SIGINT', () => {
+//     console.log('Shutting down server...');
+//     db.end(err => {
+//         if (err) {
+//             console.error('Error closing database connection:', err);
+//             process.exit(1);
+//         }
+//         console.log('Database connection closed.');
+//         process.exit(0);
+//     });
+// });
 
-process.on('SIGTERM', () => {
-    console.log('Shutting down server...');
-    db.end(err => {
-        if (err) {
-            console.error('Error closing database connection:', err);
-            process.exit(1);
-        }
-        console.log('Database connection closed.');
-        process.exit(0);
-    });
-});
+// process.on('SIGTERM', () => {
+//     console.log('Shutting down server...');
+//     db.end(err => {
+//         if (err) {
+//             console.error('Error closing database connection:', err);
+//             process.exit(1);
+//         }
+//         console.log('Database connection closed.');
+//         process.exit(0);
+//     });
+// });
 
 // Start the Server
 app.listen(PORT, () => {
