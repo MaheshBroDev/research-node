@@ -30,6 +30,21 @@ db.connect(err => {
 });
 
 // Performance Metrics Logger
+/**
+ * Logs performance metrics for a given endpoint.
+ *
+ * @param {string} endpoint - The endpoint being measured.
+ * @param {Array} startTime - The high-resolution real time [seconds, nanoseconds] tuple.
+ *
+ * @property {string} timestamp - The ISO string of the current date and time.
+ * @property {string} endpoint - The endpoint being measured.
+ * @property {number} rss - Resident Set Size, the total memory allocated for the process execution.
+ * @property {number} heapTotal - Total size of the allocated heap.
+ * @property {number} heapUsed - Actual memory used during the execution.
+ * @property {string} elapsedTime - The elapsed time in milliseconds.
+ * @property {string} cpuUsage - The CPU usage percentage.
+ * @property {string} memoryUsage - The memory usage in megabytes.
+ */
 const logPerformanceMetrics = (endpoint, startTime) => {
     const elapsed = process.hrtime(startTime);
     const elapsedTimeMs = (elapsed[0] * 1000 + elapsed[1] / 1e6).toFixed(2);
