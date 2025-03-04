@@ -142,6 +142,21 @@ app.post('/items/create', authMiddleware, performanceLoggingMiddleware('/items/c
     });
 });
 
+// Update Item (Authenticated)
+app.put('/item/update', authMiddleware, performanceLoggingMiddleware('/item/update'), (req, res) => {
+    const { id, name, value } = req.body;
+    if (!id || !name || !value) {
+        return res.status(400).json({ message: 'Missing parameters' });
+    }
+
+    db.query('UPDATE items SET name = ?, value = ? WHERE id = ?', [name, value, id], (err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error updating item' });
+        }
+        res.status(200).json({ message: 'Item updated' });
+    });
+});
+
 // Helper functions for sorting
 function bubbleSort(arr) {
     let len = arr.length;
@@ -371,21 +386,21 @@ app.get('/loaderio-:filename([a-zA-Z0-9]{32}).txt', (req, res) => {
 app.delete('/item/delete', authMiddleware, performanceLoggingMiddleware('/item/delete'), (req, res) => {
     const { id } = req.query;
     if (!id || isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid ID' });
+        return res.status(400).json({ message: 'Invalid ID' });
     }
     db.query('DELETE FROM items WHERE id = ?', [id], (err) => {
-        if (err) return res.status(500).json({ error: 'Error deleting item' });
+        if (err) return res.status(500).json({ message: 'Error deleting item' });
         res.json({ message: 'Item deleted' });
     });
 });
 
 app.delete('/item/last/delete', authMiddleware, performanceLoggingMiddleware('/item/last/delete'), (req, res) => {
     db.query('SELECT id FROM items ORDER BY id DESC LIMIT 1', (err, results) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        if (results.length === 0) return res.status(404).json({ error: 'No items found' });
+        if (err) return res.status(500).json({ message: 'Database error' });
+        if (results.length === 0) return res.status(404).json({ message: 'No items found' });
         const lastItemId = results[0].id;
         db.query('DELETE FROM items WHERE id = ?', [lastItemId], (err) => {
-            if (err) return res.status(500).json({ error: 'Error deleting last item' });
+            if (err) return res.status(500).json({ message: 'Error deleting last item' });
             res.json({ message: 'Last item deleted' });
         });
     });
