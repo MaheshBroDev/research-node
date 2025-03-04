@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 const { createObjectCsvWriter } = require('csv-writer');
 const bodyParser = require('body-parser');
-const Docker = require('dockerode');
+// const Docker = require('dockerode');
 
 const app = express();
 app.use(bodyParser.json());
@@ -288,7 +288,7 @@ app.get('/docker_metrics', (req, res) => {
     res.send(json);
 });
 
-const docker = new Docker();
+// const docker = new Docker();
 
 // async function getContainerStats() {
 //   try {
